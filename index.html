@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+		<link rel="stylesheet" href="@/assets/callPanelPlugin/files/font-awesome.css">
+		<script src="@/assets/callPanelPlugin/files/jquery_iok_common.js"></script>
+		<script type="text/javascript" src="@/assets/callPanelPlugin/files/jquery.js"></script>
+		<script type="text/javascript" src="@/assets/callPanelPlugin/files/jquery.form.js"></script>
+		<script type="text/javascript" src="@/assets/callPanelPlugin/files/jquery_iok_page.js"></script>
+		<!-- <script type="text/javascript" src="@/assets/callPanelPlugin/files/bootstrap.js"></script> -->
+		<script type="text/javascript" src="@/assets/callPanelPlugin/components/core-min.js"></script>
+		<script type="text/javascript" src="@/assets/callPanelPlugin/components/evpkdf-min.js"></script>
+		<script type="text/javascript" src="@/assets/callPanelPlugin/components/enc-base64-min.js"></script>
+		<script type="text/javascript" src="@/assets/callPanelPlugin/components/cipher-core-min.js"></script>
+		<script type="text/javascript" src="@/assets/callPanelPlugin/components/aes-min.js"></script>
+		<script type="text/javascript" src="@/assets/callPanelPlugin/components/hmac-min.js"></script>
+		<script type="text/javascript" src="@/assets/callPanelPlugin/components/sha256-min.js"></script>
+  </head>
+  <!-- <body onload="startServer()" id="ext-gen1018"  class="no-skin x-body x-webkit x-chrome x-reset"> -->
+  <body id="ext-gen1018"  class="no-skin x-body x-webkit x-chrome x-reset">
+    <script type="text/javascript" src="@/assets/callPanelPlugin/files/sip-0.8.1.js"></script>
+    <!-- <script type="text/javascript" src="@/assets/callPanelPlugin/files/wsxml.js"></script> -->
+    <script type="text/javascript" src="@/assets/callPanelPlugin/files/wsxmlx.js"></script>
+    <script type="text/javascript" src="@/assets/callPanelPlugin/files/audioplayer.js"></script>
+    <script type="text/javascript" src="@/assets/callPanelPlugin/files/main.js"></script>
+    <!-- 软电话事件 -->
+    <script type="text/javascript">
+      /**
+       * 应答事件
+       * @returns
+       */
+      function callAnswerEvent(CallerDN, CalledDN, CallTaskID, LogID, TaskID) {
+        //alert(CallerDN+"|"+CalledDN+"|"+CallTaskID+"|"+LogID+"|"+TaskID);
+        alert('应答事件')
+        stopPlaying()
+        //预测外呼
+        if (CallTaskID != null && parseInt(CallTaskID, 10) > 0) {
+          var url =
+            'calltask/doTaskPre.do?ID=' +
+            CallTaskID +
+            '&CALL_TASK_ID=' +
+            CallTaskID +
+            '&TASK_ID=' +
+            TaskID +
+            '&SYS_ID=' +
+            $('#sysid').val()
+          siMenu('' + CallTaskID, '' + CallTaskID, '预测:' + CallTaskID, url)
+        }
+      }
+
+      function dial_out(phone_id, call_task_id) {
+        //alert(phone_id);
+
+        makecall(phone_id)
+      }
+      /**
+			    	外呼事件
+			    	@param
+			    	主叫，被叫，呼叫类型
+			    **/
+      function beginCallEvent(CallingDN, CalledDN, CallType) {
+        alert(CallingDN + '|' + CalledDN + '|' + CallType)
+        alert('外呼事件')
+      }
+      /**
+			    	挂机事件
+			    **/
+      function handDownEvent() {
+        //alert("挂机事件");
+        $('#callType').val('0')
+        $('#dataType').val('0')
+        stopPlaying()
+      }
+      /**
+			    	主动拨打事件   传 被叫号码
+			    */
+      function makeCallEvent() {
+        //alert(CalledDN);
+        var phone = $('#txt2').val()
+        //alert("sss"+phone);
+        makecall(phone)
+        // 给pAssociateDataVal 设置值 calltaskid;logid;taskid;sysid
+        $('#pAssociateDataVal').val('')
+      }
+      /**
+			    	监听
+			    */
+      function jt(ch, dn) {
+        //alert(dn);
+        monAction(3, '', dn)
+      }
+
+      //暂停播放语音
+      function stopPlaying() {
+        var audio = document.getElementById('music')
+        if (audio !== null) {
+          audio.pause() // 这个就是暂停
+        }
+      }
+      /*
+			    function playRing()
+			    {
+			       $('#ringDiv').html("<audio preload id='music' loop='true' controls='controls'  hidden><source src='static/audioPlayer/audio.mp3' type='audio/mpeg'></audio>");
+			       var audio = document.getElementById('music'); 
+			       //alert("ssss");
+					if(audio!==null){                          
+					     audio.play();
+					 } 
+			    }
+			    */
+      /*   function ts()
+			    {
+			    	alert('123');
+			    }
+			   
+			  
+			   function autoAns()
+			   {
+			      var a=$("#autoAns").val();
+			      if(a=="0")
+			      {
+			        a=$("#autoAns").val("1");
+			      }
+			      else
+			      {
+			       a=$("#autoAns").val("0");
+			      }
+			   }
+			  $(function(){//分机获取密码
+				   var agentdn=$("#agentdn").val();
+			       if(agentdn!="")
+				   $.ajax({
+						type: "POST",
+						url: 'ip2phone/getdnpwd?AGENT_DN='+agentdn,
+						dataType:'json',
+						cache: true,
+						success: function(data){
+							$("#sip_password").val(data.dn.PWD);
+							$("#sip_uri").val("sip:"+agentdn+"@192.168.99.226:5090");
+						}
+					});
+			   });
+			   */
+      function getCallId() {
+        return $('#callid').val()
+      }
+      function showTd() {
+        sd = $('#showTd').val()
+        if (parseInt(sd, 10) == 1) {
+          $('.td_phone').show()
+          $('#showTd').val('0')
+        } else {
+          $('.td_phone').hide()
+          $('#showTd').val('1')
+        }
+      }
+
+      function call_out() {
+        $('#txt2').val(diag.innerFrame.contentWindow.document.getElementById('numbers').innerText)
+        diag.close()
+        makeCallEvent()
+      }
+
+      function call_out2(txt) {
+        $('#txt2').val(txt)
+        makeCallEvent()
+      }
+
+      function dialOut() {
+        dialPlate()
+      }
+
+      $(function () {
+        showTd()
+        setInterval(updateStatus, 1000)
+        // initCallRecord()
+        //定义setTimeout执行方法
+        var TimeFn = null
+
+        $('#call_btn').click(function () {
+          // 取消上次延时未执行的方法
+          clearTimeout(TimeFn)
+          //执行延时
+          TimeFn = setTimeout(function () {
+            makeCallEvent()
+          }, 300)
+        })
+
+        $('#call_btn').dblclick(function () {
+          // 取消上次延时未执行的方法
+          clearTimeout(TimeFn)
+          //双击事件的执行代码
+          dialOut()
+        })
+      })
+
+      $('#txt2').bind('keydown', function (e) {
+        // 兼容FF和IE和Opera
+        var theEvent = e || window.event
+        var code = theEvent.keyCode || theEvent.which || theEvent.charCode
+        if (code == '13') {
+          //回车执行查询
+          makeCallEvent()
+        }
+      })
+
+      function updateStatus() {
+        $('#infolab').attr('title', $('#lab3').html())
+      }
+    </script>
+    <div id="app">
+      <style>
+        .app-loading {
+          display: flex;
+          width: 100%;
+          height: 100%;
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+          background: #f0f2f5;
+        }
+
+        .app-loading .app-loading-wrap {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          display: flex;
+          -webkit-transform: translate3d(-50%, -50%, 0);
+          transform: translate3d(-50%, -50%, 0);
+          justify-content: center;
+          align-items: center;
+          flex-direction: column;
+        }
+
+        .app-loading .app-loading-title {
+          margin-bottom: 30px;
+          font-size: 20px;
+          font-weight: bold;
+          text-align: center;
+        }
+
+        .app-loading .app-loading-logo {
+          width: 100px;
+          margin: 0 auto 15px auto;
+        }
+
+        .app-loading .app-loading-item {
+          position: relative;
+          display: inline-block;
+          width: 60px;
+          height: 60px;
+          vertical-align: middle;
+          border-radius: 50%;
+        }
+
+        .app-loading .app-loading-outter {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border: 4px solid #2d8cf0;
+          border-bottom: 0;
+          border-left-color: transparent;
+          border-radius: 50%;
+          animation: loader-outter 1s cubic-bezier(0.42, 0.61, 0.58, 0.41) infinite;
+        }
+
+        .app-loading .app-loading-inner {
+          position: absolute;
+          top: calc(50% - 20px);
+          left: calc(50% - 20px);
+          width: 40px;
+          height: 40px;
+          border: 4px solid #87bdff;
+          border-right: 0;
+          border-top-color: transparent;
+          border-radius: 50%;
+          animation: loader-inner 1s cubic-bezier(0.42, 0.61, 0.58, 0.41) infinite;
+        }
+
+        @-webkit-keyframes loader-outter {
+          0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+          }
+
+          100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes loader-outter {
+          0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+          }
+
+          100% {
+            -webkit-transform: rotate(360deg);
+            transform: rotate(360deg);
+          }
+        }
+
+        @-webkit-keyframes loader-inner {
+          0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+          }
+
+          100% {
+            -webkit-transform: rotate(-360deg);
+            transform: rotate(-360deg);
+          }
+        }
+
+        @keyframes loader-inner {
+          0% {
+            -webkit-transform: rotate(0deg);
+            transform: rotate(0deg);
+          }
+
+          100% {
+            -webkit-transform: rotate(-360deg);
+            transform: rotate(-360deg);
+          }
+        }
+      </style>
+      <div class="app-loading">
+        <div class="app-loading-wrap">
+          <div class="app-loading-title">
+            <img src="./src/assets/aimg/logo.png" class="app-loading-logo" alt="Logo" />
+            <!-- <div class="app-loading-title"><%= title %></div> -->
+          </div>
+          <div class="app-loading-item">
+            <div class="app-loading-outter"></div>
+            <div class="app-loading-inner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="navbar" class="navbar navbar-default">
+      <style>
+        #navbar{
+          /* display: none; */
+          position: fixed;
+          margin: auto;
+          top: 0;
+          left: 0;
+          right: 0;
+          width: calc(100vw - 750px);
+          z-index: 22;
+        }
+        .navbar-container{
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          padding-bottom: 10px;
+        }
+      </style>
+      <!--*****获取座席列表的ApiURL*****固定值-->
+      <!--
+					<input type="hidden" name="apiurl" value="ws://114.55.43.140:9888" id="apiurl">
+					-->
+      <input type="hidden" name="apiurl" value="ws://192.168.20.105:9888" id="apiurl" />
+      <!--*****CTI服务地址 *****固定值-->
+      <!--
+					<input type="hidden" name="wsurl" value="ws://114.55.43.140:9877" id="wsurl">
+					-->
+      <input type="hidden" name="wsurl" value="ws://192.168.20.105:9877" id="wsurl" />
+
+      <!-- 分机号  *****根据系统对应填写*****-->
+      <input type="hidden" name="agentdn" id="agentdn" value="1001" />
+      <!-- 座席工号 *****根据系统对应填写*****-->
+      <input type="hidden" name="agentid" value="1001" id="agentid" />
+      <!-- 序列号 -->
+      <input type="hidden" value="1" name="sk_node_id" id="sk_node_id" />
+      <input type="hidden" value="19" name="skseq" id="skseq" />
+      <!-- 通道号 -->
+      <input type="hidden" value="2" name="ch" id="ch" />
+      <!-- 呼出标记(sip 电话外呼cti 随路数据问题) -->
+      <input type="hidden" value="0" id="outtab" />
+      <!-- ----呼入对应值---- -->
+      <!--ALERTINGDN:--><input type="hidden" value="" name="alertingdn" id="alertingdn" />
+      <!-- CALLID -->
+      <input type="hidden" value="" name="callid" id="callid" />
+      <!--CALLER:--><input type="hidden" value="" name="callerdn" id="callerdn" />
+      <!--CALLED:--><input type="hidden" value="" name="calleddn" id="calleddn" />
+      <!--SKILL:--><input type="hidden" value="" name="skill" id="skill" />
+      <input type="hidden" value="1" id="sysid" />
+      <input type="hidden" value="" id="_skill" />
+      <!-- AssociateData -->
+      <input type="hidden" value="10010" id="iAssociateDataKey" />
+      <!-- calltaskid;logid;taskid;sysid -->
+      <input type="hidden" value="" id="pAssociateDataVal" />
+      <!-- ---------------------------(sip)start------------------------------- -->
+						 <!-- 是否使用 webrtc -->
+
+      <input type="hidden" value="0" id="use_sip" />
+      <!-- 分机注册地址 
+						 <input type="hidden" value="sip:1002@192.168.99.226:5090" id="sip_uri">-->
+      <!-- 分机注册密码 
+						 <input type="hidden" value="123456" id="sip_password">-->
+      <!-- webrtc 的websocket 地址/infook/FS426/conf/sip_profiles/internal.xml   <param name="ws-binding"  value=":5066"/> 
+						 <input type="hidden" value="ws://192.168.99.226:5066" id="ws_uri">
+						 <div style="width: 424px; height: 324px;background-color: #333333; border: 2px solid blue; padding:0px; margin-top: 4px; display:none;">
+							<video id="remoteVideo" width="420px" height="320px" autoplay=""></video>
+						 </div>
+						 <div style="width: 424px; height: 324px;background-color: #333333; border: 2px solid blue; padding:0px; margin-top: 4px;  display:none;">
+								<video id="localVideo" width="420px" height="320px" autoplay=""></video>
+						 </div>-->
+      <!-- ---------------------------(sip)end------------------------------->
+
+     
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
